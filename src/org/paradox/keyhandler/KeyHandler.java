@@ -20,18 +20,39 @@
 
 package com.paradox.keyhandler;
 
+import android.app.ActivityManagerNative;
+import android.app.KeyguardManager;
+import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.Manifest;
+import android.media.IAudioService;
+import android.media.session.MediaSessionLegacyHelper;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.PowerManager;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.SystemClock;
 import android.os.UserHandle;
 import android.os.Vibrator;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
+import android.view.WindowManagerGlobal;
 
 import com.android.internal.os.DeviceKeyHandler;
 import com.android.internal.util.ArrayUtils;
@@ -54,10 +75,6 @@ public class KeyHandler implements DeviceKeyHandler {
 	private static final int[] sSupportedGestures = new int[]{
         	GESTURE_CIRCLE_SCANCODE,
         	GESTURE_V_SCANCODE,
-		MODE_TOTAL_SILENCE,
-		MODE_ALARMS_ONLY,
-		MODE_PRIORITY_ONLY,
-		MODE_NONE,
     	};
 	
 	private static final int[] sHandledGestures = new int[]{
@@ -77,8 +94,16 @@ public class KeyHandler implements DeviceKeyHandler {
 	private final NotificationManager mNotificationManager;
 	private EventHandler mEventHandler;
 	private WakeLock mGestureWakeLock;
+	private KeyguardManager mKeyguardManager;
 	private Handler mHandler = new Handler();
 	private Vibrator mVibrator;
+
+	private void ensureKeyguardManager() {
+	if (mKeyguardManager == null) {
+		mKeyguardManager =
+			(KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
+		}
+	}
 
 	public KeyHandler(Context context) {
 		mContext = context;
@@ -134,6 +159,7 @@ public class KeyHandler implements DeviceKeyHandler {
 	
 	@Override
     public boolean handleKeyEvent(KeyEvent event) {
+        int scanCode = event.getScanCode();
         if (event.getAction() != KeyEvent.ACTION_UP) {
             return false;
         }
@@ -146,9 +172,17 @@ public class KeyHandler implements DeviceKeyHandler {
         return isKeySupported;
     }
 	
-	@Override
-    public boolean canHandleKeyEvent(KeyEvent event) {
-        return ArrayUtils.contains(sSupportedGestures, event.getScanCode());
+    private void startActivitySafely(Intent intent) {
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        try {
+            UserHandle user = new UserHandle(UserHandle.USER_CURRENT);
+            mContext.startActivityAsUser(intent, null, user);
+        } catch (ActivityNotFoundException e) {
+            // Ignore
+        }
     }
 
     private Message getMessageForKeyEvent(KeyEvent keyEvent) {
