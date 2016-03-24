@@ -163,7 +163,7 @@ public class KeyHandler implements DeviceKeyHandler {
         	if (event.getAction() != KeyEvent.ACTION_UP) {
             		return false;
         	}
-        	if (DEBUG) Log.i(TAG, "scanCode=" + event.getScanCode());
+        	if (DEBUG) Log.i(TAG, "scanCode=" + scanCode);
         	boolean isKeySupported = isKeySupported(scanCode);
         	if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
             		Message msg = getMessageForKeyEvent(event);
