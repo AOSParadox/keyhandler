@@ -65,8 +65,8 @@ public class KeyHandler implements DeviceKeyHandler {
 	private static final int GESTURE_WAKELOCK_DURATION = 3000;
 	
 	// Supported scancodes
-	private static final int GESTURE_CIRCLE_SCANCODE = 62;
-	private static final int GESTURE_V_SCANCODE = 63;
+	private static final int GESTURE_CIRCLE_SCANCODE = 250;
+	private static final int GESTURE_V_SCANCODE = 252;
 	private static final int MODE_TOTAL_SILENCE = 600;
 	private static final int MODE_ALARMS_ONLY = 601;
 	private static final int MODE_PRIORITY_ONLY = 602;
@@ -99,9 +99,8 @@ public class KeyHandler implements DeviceKeyHandler {
 	private Vibrator mVibrator;
 
 	private void ensureKeyguardManager() {
-	if (mKeyguardManager == null) {
-		mKeyguardManager =
-			(KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
+		if (mKeyguardManager == null) {
+			mKeyguardManager = (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
 		}
 	}
 
@@ -109,29 +108,29 @@ public class KeyHandler implements DeviceKeyHandler {
 		mContext = context;
 		mEventHandler = new EventHandler();
 		mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-			mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		mGestureWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GestureWakeLock");
 		mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     	}
 	
 	private class EventHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            KeyEvent event = (KeyEvent) msg.obj;
-            switch(event.getScanCode()) {
-           			 case GESTURE_CIRCLE_SCANCODE:
-           			 	if (DEBUG) Log.i(TAG, "GESTURE_CIRCLE_SCANCODE");
-           			 	ensureKeyguardManager();
-           			 	String action = null;
-           			 	mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
-           			 	if (mKeyguardManager.isKeyguardSecure() && mKeyguardManager.isKeyguardLocked()) {
+        	@Override
+        	public void handleMessage(Message msg) {
+        		KeyEvent event = (KeyEvent) msg.obj;
+            		switch(event.getScanCode()) {
+           			case GESTURE_CIRCLE_SCANCODE:
+           				if (DEBUG) Log.i(TAG, "GESTURE_CIRCLE_SCANCODE");
+           				ensureKeyguardManager();
+           				String action = null;
+           				mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
+           				if (mKeyguardManager.isKeyguardSecure() && mKeyguardManager.isKeyguardLocked()) {
            			 		action = MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA_SECURE;
            			 	} else {
            			 		try {
             			 			WindowManagerGlobal.getWindowManagerService().dismissKeyguard();
-           			 	} catch (RemoteException e) {
-           			 		// Ignore
-           			 	}
+           			 		} catch (RemoteException e) {
+           			 			// Ignore
+           			 		}
            			 		action = MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA;
            			 	}
            			 	mPowerManager.wakeUp(SystemClock.uptimeMillis(), "android.policy:GESTURE");
@@ -153,48 +152,48 @@ public class KeyHandler implements DeviceKeyHandler {
 					if (DEBUG) Log.i(TAG, "ZEN_MODE=" + sSupportedSliderModes.get(event.getScanCode()));
 					mNotificationManager.setZenMode(sSupportedSliderModes.get(event.getScanCode()), null, TAG);
 					mVibrator.vibrate(50);
-            }
-        }
-    }
+					break;
+            		}
+        	}
+    	}
 	
 	@Override
-    public boolean handleKeyEvent(KeyEvent event) {
-        int scanCode = event.getScanCode();
-        if (event.getAction() != KeyEvent.ACTION_UP) {
-            return false;
-        }
-        if (DEBUG) Log.i(TAG, "scanCode=" + event.getScanCode());
-        boolean isKeySupported = isKeySupported(scanCode);
-        if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
-            Message msg = getMessageForKeyEvent(event);
-            mEventHandler.sendMessage(msg);
-        }
-        return isKeySupported;
-    }
-    
-    private boolean isKeySupported(int scanCode) {
-    	if(ArrayUtils.contains(sSupportedGestures, scanCode) || sSupportedSliderModes.indexOfKey(scanCode) >= 0) {
-    	    return true;
+    	public boolean handleKeyEvent(KeyEvent event) {
+        	int scanCode = event.getScanCode();
+        	if (event.getAction() != KeyEvent.ACTION_UP) {
+            		return false;
+        	}
+        	if (DEBUG) Log.i(TAG, "scanCode=" + event.getScanCode());
+        	boolean isKeySupported = isKeySupported(scanCode);
+        	if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
+            		Message msg = getMessageForKeyEvent(event);
+            		mEventHandler.sendMessage(msg);
+        	}
+        	return isKeySupported;
     	}
-    	return false;
-    }
+    
+    	private boolean isKeySupported(int scanCode) {
+    		if(ArrayUtils.contains(sSupportedGestures, scanCode) || sSupportedSliderModes.indexOfKey(scanCode) >= 0) {
+    	    		return true;
+    		}
+    		return false;
+    	}
 	
-    private void startActivitySafely(Intent intent) {
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_SINGLE_TOP
-                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        try {
-            UserHandle user = new UserHandle(UserHandle.USER_CURRENT);
-            mContext.startActivityAsUser(intent, null, user);
-        } catch (ActivityNotFoundException e) {
-            // Ignore
-        }
-    }
+    	private void startActivitySafely(Intent intent) {
+        	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                		| Intent.FLAG_ACTIVITY_SINGLE_TOP
+                		| Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        	try {
+            		UserHandle user = new UserHandle(UserHandle.USER_CURRENT);
+            		mContext.startActivityAsUser(intent, null, user);
+        	} catch (ActivityNotFoundException e) {
+            		// Ignore
+        	}
+    	}
 
-    private Message getMessageForKeyEvent(KeyEvent keyEvent) {
-        Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
-        msg.obj = keyEvent;
-        return msg;
-    }
+    	private Message getMessageForKeyEvent(KeyEvent keyEvent) {
+        	Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
+        	msg.obj = keyEvent;
+        	return msg;
+    	}
 }
