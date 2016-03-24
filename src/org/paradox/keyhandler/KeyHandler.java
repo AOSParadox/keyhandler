@@ -164,12 +164,19 @@ public class KeyHandler implements DeviceKeyHandler {
             return false;
         }
         if (DEBUG) Log.i(TAG, "scanCode=" + event.getScanCode());
-        boolean isKeySupported = ArrayUtils.contains(sSupportedGestures, event.getScanCode());
+        boolean isKeySupported = isKeySupported(scanCode);
         if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
             Message msg = getMessageForKeyEvent(event);
             mEventHandler.sendMessage(msg);
         }
         return isKeySupported;
+    }
+    
+    private boolean isKeySupported(int scanCode) {
+    	if(ArrayUtils.contains(sSupportedGestures, scanCode) || sSupportedSliderModes.indexOfKey(scanCode) >= 0) {
+    	    return true;
+    	}
+    	return false;
     }
 	
     private void startActivitySafely(Intent intent) {
