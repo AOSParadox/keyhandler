@@ -150,8 +150,8 @@ public class KeyHandler implements DeviceKeyHandler {
 				case MODE_ALARMS_ONLY:
 				case MODE_PRIORITY_ONLY:
 				case MODE_NONE:
-					if (DEBUG) Log.i(TAG, "ZEN_MODE=" + sSupportedSliderModes.get(scanCode));
-					mNotificationManager.setZenMode(sSupportedSliderModes.get(scanCode), null, TAG);
+					if (DEBUG) Log.i(TAG, "ZEN_MODE=" + sSupportedSliderModes.get(event.getScanCode()));
+					mNotificationManager.setZenMode(sSupportedSliderModes.get(event.getScanCode()), null, TAG);
 					mVibrator.vibrate(50);
             }
         }
