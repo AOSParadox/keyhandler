@@ -65,7 +65,7 @@ public class KeyHandler implements DeviceKeyHandler {
 	private static final int GESTURE_WAKELOCK_DURATION = 3000;
 	
 	// Supported scancodes
-	private static final int GESTURE_CIRCLE_SCANCODE = 250;
+	//private static final int GESTURE_CIRCLE_SCANCODE = 250;
 	private static final int GESTURE_V_SCANCODE = 252;
 	private static final int MODE_TOTAL_SILENCE = 600;
 	private static final int MODE_ALARMS_ONLY = 601;
@@ -73,7 +73,7 @@ public class KeyHandler implements DeviceKeyHandler {
 	private static final int MODE_NONE = 603;
 	
 	private static final int[] sSupportedGestures = new int[]{
-        	GESTURE_CIRCLE_SCANCODE,
+        	//GESTURE_CIRCLE_SCANCODE,
         	GESTURE_V_SCANCODE,
     	};
 	
@@ -118,7 +118,7 @@ public class KeyHandler implements DeviceKeyHandler {
         	public void handleMessage(Message msg) {
         		KeyEvent event = (KeyEvent) msg.obj;
             		switch(event.getScanCode()) {
-           			case GESTURE_CIRCLE_SCANCODE:
+           			/*case GESTURE_CIRCLE_SCANCODE:
            				if (DEBUG) Log.i(TAG, "GESTURE_CIRCLE_SCANCODE");
            				ensureKeyguardManager();
            				String action = null;
@@ -136,7 +136,7 @@ public class KeyHandler implements DeviceKeyHandler {
            			 	mPowerManager.wakeUp(SystemClock.uptimeMillis(), "android.policy:GESTURE");
            			 	Intent intent = new Intent(action, null);
            			 	startActivitySafely(intent);
-                			break;
+                			break;*/
 				case GESTURE_V_SCANCODE:
 					if (DEBUG) Log.i(TAG, "GESTURE_V_SCANCODE");
 					mGestureWakeLock.acquire(GESTURE_WAKELOCK_DURATION);
@@ -171,6 +171,11 @@ public class KeyHandler implements DeviceKeyHandler {
         	}
         	return isKeySupported;
     	}
+    	
+    	@Override
+	public boolean canHandleKeyEvent(KeyEvent event) {
+		return isKeySupported(event.getScanCode());
+	}
     
     	private boolean isKeySupported(int scanCode) {
     		if(ArrayUtils.contains(sSupportedGestures, scanCode) || sSupportedSliderModes.indexOfKey(scanCode) >= 0) {
@@ -179,7 +184,13 @@ public class KeyHandler implements DeviceKeyHandler {
     		return false;
     	}
 	
-    	private void startActivitySafely(Intent intent) {
+	private Message getMessageForKeyEvent(KeyEvent keyEvent) {
+        	Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
+        	msg.obj = keyEvent;
+        	return msg;
+    	}
+	
+    	/*private void startActivitySafely(Intent intent) {
         	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 		| Intent.FLAG_ACTIVITY_SINGLE_TOP
                 		| Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -189,11 +200,5 @@ public class KeyHandler implements DeviceKeyHandler {
         	} catch (ActivityNotFoundException e) {
             		// Ignore
         	}
-    	}
-
-    	private Message getMessageForKeyEvent(KeyEvent keyEvent) {
-        	Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
-        	msg.obj = keyEvent;
-        	return msg;
-    	}
+    	}*/
 }
