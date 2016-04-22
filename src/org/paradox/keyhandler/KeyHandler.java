@@ -31,6 +31,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
+import android.os.SystemProperties;
 
 import com.android.internal.os.DeviceKeyHandler;
 import com.android.internal.util.ArrayUtils;
@@ -40,9 +41,17 @@ public class KeyHandler implements DeviceKeyHandler {
     private static final boolean DEBUG = true;
     private static final int GESTURE_REQUEST = 1;
     private static final int GESTURE_WAKELOCK_DURATION = 3000;
-	
+	        
+    String product = System.getProperty("ro.product.name", "?");
+
     // Supported scancodes
+
+    if (product == bacon) { // Bacon uses it's own OPPO Gesture V code, please satisfy it
+    private static final int GESTURE_V_SCANCODE = 63;
+    } else { // onyx, oneplus2 as of now
     private static final int GESTURE_V_SCANCODE = 252;
+    }
+
     private static final int MODE_TOTAL_SILENCE = 600;
     private static final int MODE_ALARMS_ONLY = 601;
     private static final int MODE_PRIORITY_ONLY = 602;
