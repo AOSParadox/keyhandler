@@ -20,3 +20,5 @@ Device-Support
 ==============
 
 - OnePlus X (onyx)
+
+- OnePlus One (bacon)
